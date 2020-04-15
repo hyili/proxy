@@ -9,6 +9,14 @@ import (
 	"syscall"
 )
 
+func ClientToServerHandler(buffer []byte, buflen int) {
+	fmt.Println("CTSH")
+}
+
+func ServerToClientHandler(buffer []byte, buflen int) {
+	fmt.Println("STCH")
+}
+
 func main() {
 	done := make(chan bool, 1)
 
@@ -21,6 +29,8 @@ func main() {
 		CliListenNetAddress: "127.0.0.1:7070",
 		SrvNetAddress:       "mail.itri.org.tw:25",
 		Done:                done,
+		ClientToServerHandler: ClientToServerHandler,
+		ServerToClientHandler: ServerToClientHandler,
 	}
 
 	// defer
@@ -33,6 +43,7 @@ func main() {
 	}
 
 	// signal goroutine
+	// TODO: cannot interrupt before client get in
 	go func() {
 		sig := <-sigsChannel
 		fmt.Println(" [*] " + sig.String())

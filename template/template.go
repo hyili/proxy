@@ -19,18 +19,12 @@ type Proxy interface {
 type TcpProxy struct {
 	NetProto, CliListenNetAddress, SrvNetAddress string
 
-	cliListener      net.Listener // interface
-	cliConn, srvConn net.Conn     // interface
-	cliErr, srvErr   error
-	Done             chan bool
-}
-
-func clientToServerHandler(buffer []byte, buflen int) {
-	// TODO: do something here
-}
-
-func serverToClientHandler(buffer []byte, buflen int) {
-	// TODO: do something here
+	cliListener           net.Listener // interface
+	cliConn, srvConn      net.Conn     // interface
+	cliErr, srvErr        error
+	Done                  chan bool
+	ClientToServerHandler func([]byte, int)
+	ServerToClientHandler func([]byte, int)
 }
 
 func (proxy TcpProxy) ReadyToCommunicate() error {
@@ -78,7 +72,7 @@ func (proxy TcpProxy) clientToServer() {
 			break
 		}
 
-		clientToServerHandler(buffer, buflen)
+		proxy.ClientToServerHandler(buffer, buflen)
 
 		proxy.srvConn.Write(buffer[0:buflen])
 	}
@@ -98,7 +92,7 @@ func (proxy TcpProxy) serverToClient() {
 			break
 		}
 
-		serverToClientHandler(buffer, buflen)
+		proxy.ServerToClientHandler(buffer, buflen)
 
 		proxy.cliConn.Write(buffer[0:buflen])
 	}
