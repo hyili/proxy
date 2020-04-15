@@ -80,7 +80,7 @@ func (proxy TcpProxy) clientToServer() {
 
 		clientToServerHandler(buffer, buflen)
 
-		proxy.srvConn.Write(buffer)
+		proxy.srvConn.Write(buffer[0:buflen])
 	}
 
 	proxy.Done <- true
@@ -100,7 +100,7 @@ func (proxy TcpProxy) serverToClient() {
 
 		serverToClientHandler(buffer, buflen)
 
-		proxy.cliConn.Write(buffer)
+		proxy.cliConn.Write(buffer[0:buflen])
 	}
 
 	proxy.Done <- true
