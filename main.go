@@ -10,11 +10,13 @@ import (
 )
 
 func ClientToServerHandler(buffer []byte, buflen int) {
-	fmt.Println("CTSH")
+	fmt.Println("Client said:")
+	fmt.Println(string(buffer[:buflen]))
 }
 
 func ServerToClientHandler(buffer []byte, buflen int) {
-	fmt.Println("STCH")
+	fmt.Println("Server said:")
+	fmt.Println(string(buffer[:buflen]))
 }
 
 func main() {
@@ -26,7 +28,7 @@ func main() {
 
 	P := template.TcpProxy{
 		NetProto:            "tcp",
-		CliListenNetAddress: "127.0.0.1:7070",
+		CliListenNetAddress: "127.0.0.1:7077",
 		SrvNetAddress:       "mail.itri.org.tw:25",
 		Done:                done,
 		ClientToServerHandler: ClientToServerHandler,
@@ -36,14 +38,15 @@ func main() {
 	// defer
 	defer P.CloseProxy()
 
-	fmt.Println(" [*] ReadyToCommunicate ...")
-	err := P.ReadyToCommunicate()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	go func() {
+		fmt.Println(" [*] ReadyToCommunicate ...")
+		err := P.ReadyToCommunicate()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
 
 	// signal goroutine
-	// TODO: cannot interrupt before client get in
 	go func() {
 		sig := <-sigsChannel
 		fmt.Println(" [*] " + sig.String())

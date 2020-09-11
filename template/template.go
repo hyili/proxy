@@ -87,7 +87,7 @@ func (proxy TcpProxy) serverToClient() {
 	for {
 		buflen, proxy.srvErr = proxy.srvConn.Read(buffer)
 
-		if proxy.cliErr == io.EOF {
+		if proxy.srvErr == io.EOF {
 			fmt.Println(" [*] Server has terminated the connection.")
 			break
 		}
