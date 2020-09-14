@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/hyili/proxy/template/structure"
 	"io"
 	"io/ioutil"
 	"net"
-	"proxy/template/structure"
 	"strconv"
 )
 

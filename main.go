@@ -4,11 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/hyili/proxy/template"
 	"log"
 	"net"
 	"os"
 	"os/signal"
-	"proxy/template"
 	"strconv"
 	"syscall"
 )
