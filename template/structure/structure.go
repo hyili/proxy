@@ -2,8 +2,8 @@ package structure
 
 import (
 	"context"
-	"fmt"
 	"net"
+	"sync"
 )
 
 // Connection Pair (Proxy) & Connection Pair (Proxy) Pool
@@ -23,6 +23,7 @@ type ConnectionPairPool struct {
 	pool        map[int]*ConnectionPairPoolSlot
 	emptySlots  chan int
 	maxUnusedId int
+	lock        sync.Mutex
 }
 
 func ConnectionPairPoolInit(connPairPool *ConnectionPairPool) {
@@ -34,39 +35,47 @@ func ConnectionPairPoolInit(connPairPool *ConnectionPairPool) {
 func (connPairPool *ConnectionPairPool) Add(cid int, sid int) int {
 	var id int
 
-	select {
-	case id, _ = <-connPairPool.emptySlots:
-	default:
-		id = connPairPool.maxUnusedId
-		connPairPool.maxUnusedId += 1
-	}
+	/*
+		select {
+		case id, _ = <-connPairPool.emptySlots:
+		default:
+			id = connPairPool.maxUnusedId
+			connPairPool.maxUnusedId += 1
+		}
+	*/
+	id = connPairPool.maxUnusedId
+	connPairPool.maxUnusedId += 1
 
-	ctx, cancel := context.WithCancel(context.Background())
 	connPair := ConnectionPair{
-		Cid:    cid,
-		Sid:    sid,
-		Ctx:    ctx,
-		Cancel: cancel,
+		Cid: cid,
+		Sid: sid,
 	}
+	connPairPool.lock.Lock()
 	connPairPool.pool[id] = &ConnectionPairPoolSlot{
 		id:       id,
 		connPair: connPair,
 	}
+	connPairPool.lock.Unlock()
 
 	return id
 }
 
 func (connPairPool *ConnectionPairPool) Get(id int) ConnectionPair {
+	connPairPool.lock.Lock()
 	target := connPairPool.pool[id]
+	connPairPool.lock.Unlock()
 
 	return target.connPair
 }
 
 func (connPairPool *ConnectionPairPool) Recycle(id int) {
+	connPairPool.lock.Lock()
 	delete(connPairPool.pool, id)
+	connPairPool.lock.Unlock()
 	connPairPool.emptySlots <- id
 }
 
+// TODO: lock issue
 func (connPairPool *ConnectionPairPool) DrainPool() {
 	for id := range connPairPool.pool {
 		connPairPool.Recycle(id)
@@ -83,6 +92,7 @@ type ConnectionPool struct {
 	pool        map[int]*ConnectionPoolSlot
 	emptySlots  chan int
 	maxUnusedId int
+	lock        sync.Mutex
 }
 
 func ConnectionPoolInit(connPool *ConnectionPool) {
@@ -99,28 +109,34 @@ func (connPool *ConnectionPool) Add(conn net.Conn) int {
 	default:
 		id = connPool.maxUnusedId
 		connPool.maxUnusedId += 1
-		fmt.Println(id)
 	}
 
+	connPool.lock.Lock()
 	connPool.pool[id] = &ConnectionPoolSlot{
 		id:   id,
 		conn: conn,
 	}
+	connPool.lock.Unlock()
 
 	return id
 }
 
 func (connPool *ConnectionPool) Get(id int) net.Conn {
+	connPool.lock.Lock()
 	target := connPool.pool[id]
+	connPool.lock.Unlock()
 
 	return target.conn
 }
 
 func (connPool *ConnectionPool) Recycle(id int) {
+	connPool.lock.Lock()
 	delete(connPool.pool, id)
+	connPool.lock.Unlock()
 	connPool.emptySlots <- id
 }
 
+// TODO: lock issue
 func (connPool *ConnectionPool) DrainPool() {
 	for id := range connPool.pool {
 		connPool.Recycle(id)
