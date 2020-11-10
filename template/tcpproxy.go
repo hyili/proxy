@@ -28,8 +28,8 @@ type TcpProxy struct {
 	connPairPool          structure.ConnectionPairPool
 	cliErr, srvErr        error
 	Done                  chan bool
-	ClientToServerHandler func([]byte, int, int, net.Addr, net.Addr)
-	ServerToClientHandler func([]byte, int, int, net.Addr, net.Addr)
+	ClientToServerHandler func([]byte, int, int, net.Addr, net.Addr) ([]byte, int)
+	ServerToClientHandler func([]byte, int, int, net.Addr, net.Addr) ([]byte, int)
 }
 
 func (proxy *TcpProxy) ReadyToCommunicate() error {
@@ -113,6 +113,8 @@ func (proxy *TcpProxy) ReadyToCommunicate() error {
 func (proxy *TcpProxy) clientToServer(pid int) {
 	buffer := make([]byte, 1024)
 	buflen := 0
+	var newBuffer []byte
+	var newBuflen int
 
 	connPair := proxy.connPairPool.Get(pid)
 	cliConn := proxy.cliConnPool.Get(connPair.Cid)
@@ -132,8 +134,8 @@ func (proxy *TcpProxy) clientToServer(pid int) {
 			break
 		}
 
-		proxy.ClientToServerHandler(buffer, buflen, pid, cliAddr, srvAddr)
-		srvConn.Write(buffer[0:buflen])
+		newBuffer, newBuflen = proxy.ClientToServerHandler(buffer, buflen, pid, cliAddr, srvAddr)
+		srvConn.Write(newBuffer[0:newBuflen])
 	}
 
 	// TODO: need to wait for serverToClient Recycle() before it can be accessed by new connection
@@ -149,6 +151,8 @@ func (proxy *TcpProxy) clientToServer(pid int) {
 func (proxy *TcpProxy) serverToClient(pid int) {
 	buffer := make([]byte, 1024)
 	buflen := 0
+	var newBuffer []byte
+	var newBuflen int
 
 	connPair := proxy.connPairPool.Get(pid)
 	cliConn := proxy.cliConnPool.Get(connPair.Cid)
@@ -168,8 +172,8 @@ func (proxy *TcpProxy) serverToClient(pid int) {
 			break
 		}
 
-		proxy.ServerToClientHandler(buffer, buflen, pid, cliAddr, srvAddr)
-		cliConn.Write(buffer[0:buflen])
+		newBuffer, newBuflen = proxy.ServerToClientHandler(buffer, buflen, pid, cliAddr, srvAddr)
+		cliConn.Write(newBuffer[0:newBuflen])
 	}
 
 	// TODO: need to wait for serverToClient Recycle() before it can be accessed by new connection

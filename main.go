@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"bytes"
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
@@ -13,14 +14,30 @@ import (
 	"syscall"
 )
 
-func ClientToServerHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr) {
+func ClientToServerHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr) ([]byte, int) {
 	fmt.Println(color.YellowString(" ["+strconv.Itoa(pid)+"] ") + "Client(" + color.MagentaString(cliAddr.String()) + ") said:")
 	fmt.Println(string(buffer[:buflen]))
+
+	return buffer, buflen
+
+	/*
+		// Replace User-Agent: curl/7.29.0
+
+		newBuffer := bytes.Replace(buffer, []byte("curl/7.29.0"), []byte("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36"), 1)
+		newBuflen := len(newBuffer)
+
+		fmt.Println(color.YellowString(" ["+strconv.Itoa(pid)+"] ") + "Client(" + color.MagentaString(cliAddr.String()) + ") said:")
+		fmt.Println(string(newBuffer[:newBuflen]))
+
+		return newBuffer, newBuflen
+	*/
 }
 
-func ServerToClientHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr) {
+func ServerToClientHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr) ([]byte, int) {
 	fmt.Println(color.YellowString(" ["+strconv.Itoa(pid)+"] ") + "Server(" + color.MagentaString(srvAddr.String()) + ") said:")
 	fmt.Println(string(buffer[:buflen]))
+
+	return buffer, buflen
 }
 
 func main() {
@@ -39,13 +56,13 @@ func main() {
 	signal.Notify(sigsChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	P := template.TcpProxy{
-		NetProto:            "tcp",
-		CliListenNetAddress: *CliListenNetAddress,
-		SrvNetAddress:       *SrvNetAddress,
-		TlsOn:               *TlsOn,
-		CertPemFilePath:     *CertPemFilePath,
-		KeyPemFilePath:      *KeyPemFilePath,
-		Done:                done,
+		NetProto:              "tcp",
+		CliListenNetAddress:   *CliListenNetAddress,
+		SrvNetAddress:         *SrvNetAddress,
+		TlsOn:                 *TlsOn,
+		CertPemFilePath:       *CertPemFilePath,
+		KeyPemFilePath:        *KeyPemFilePath,
+		Done:                  done,
 		ClientToServerHandler: ClientToServerHandler,
 		ServerToClientHandler: ServerToClientHandler,
 	}
