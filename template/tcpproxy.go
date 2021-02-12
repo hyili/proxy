@@ -134,8 +134,9 @@ func (proxy *TcpProxy) clientToServer(pid int) {
 			break
 		}
 
-		newBuffer, newBuflen = proxy.ClientToServerHandler(buffer, buflen, pid, cliAddr, srvAddr)
+		newBuffer, newBuflen = proxy.ClientToServerHandler(buffer, buflen, pid, cliAddr, srvAddr, proxy.CliListenNetAddress, proxy.SrvNetAddress)
 		srvConn.Write(newBuffer[0:newBuflen])
+
 	}
 
 	// TODO: need to wait for serverToClient Recycle() before it can be accessed by new connection
@@ -172,7 +173,7 @@ func (proxy *TcpProxy) serverToClient(pid int) {
 			break
 		}
 
-		newBuffer, newBuflen = proxy.ServerToClientHandler(buffer, buflen, pid, cliAddr, srvAddr)
+		newBuffer, newBuflen = proxy.ServerToClientHandler(buffer, buflen, pid, cliAddr, srvAddr, proxy.CliListenNetAddress, proxy.SrvNetAddress)
 		cliConn.Write(newBuffer[0:newBuflen])
 	}
 

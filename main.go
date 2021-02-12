@@ -14,7 +14,7 @@ import (
 	"syscall"
 )
 
-func ClientToServerHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr) ([]byte, int) {
+func ClientToServerHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr, CliListenNetAddress string, SrvNetAddress string) ([]byte, int) {
 	fmt.Println(color.YellowString(" ["+strconv.Itoa(pid)+"] ") + "Client(" + color.MagentaString(cliAddr.String()) + ") said:")
 	fmt.Println(string(buffer[:buflen]))
 
@@ -33,7 +33,7 @@ func ClientToServerHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr,
 	*/
 }
 
-func ServerToClientHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr) ([]byte, int) {
+func ServerToClientHandler(buffer []byte, buflen int, pid int, cliAddr net.Addr, srvAddr net.Addr, CliListenNetAddress string, SrvNetAddress string) ([]byte, int) {
 	fmt.Println(color.YellowString(" ["+strconv.Itoa(pid)+"] ") + "Server(" + color.MagentaString(srvAddr.String()) + ") said:")
 	fmt.Println(string(buffer[:buflen]))
 
